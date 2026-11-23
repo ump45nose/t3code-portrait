@@ -6,8 +6,9 @@ outside the app. T3 Code's installation is not modified.
 When the T3 Code window is taller than it is wide:
 
 - the sidebar moves to the top of the window; threads are shown in two columns, each card on two
-  lines (project, status, device and agent on the first, the title on the second), and the
+  lines (project, device and agent on the first, the title and status on the second), and the
   Working / Snoozed / Settled groups keep their own expand state;
+- the sidebar toggle collapses and expands the top area with a short animation;
 - the sidebar's buttons are gathered in one row right above the chat title: the sidebar toggle
   (pointing up), settings and the other footer buttons, search, filter, add project, new thread,
   then back and forward on the right;

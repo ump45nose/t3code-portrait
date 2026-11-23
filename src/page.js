@@ -30,15 +30,23 @@
 
   const CSS = `
 html[data-t3p="top"] [data-slot="sidebar-wrapper"] { flex-direction: column; }
+/* --t3p-cur is the sidebar's current height in % of the window; it animates on collapse/expand */
+@property --t3p-cur { syntax: "<number>"; inherits: true; initial-value: 35; }
+html[data-t3p="top"] { --t3p-cur: var(--t3p-h); transition: --t3p-cur 260ms cubic-bezier(0.3, 0, 0, 1); }
+html[data-t3p="top"]:has([data-slot="sidebar"][data-state="collapsed"]) { --t3p-cur: 0; }
+html[data-t3p="top"]:has(body[data-t3p-resizing]) { transition: none; }
 html[data-t3p="top"] [data-slot="sidebar-wrapper"] > [data-slot="sidebar"] {
-  display: block; width: 100%; height: calc(var(--t3p-h) * 1dvh); flex: none;
+  display: block; width: 100%; height: calc(var(--t3p-cur) * 1dvh); flex: none; overflow: hidden;
 }
-html[data-t3p="top"] [data-slot="sidebar-wrapper"] > [data-slot="sidebar"][data-state="collapsed"] { display: none; }
+html[data-t3p="top"] [data-slot="sidebar-wrapper"] > [data-slot="sidebar"] [data-slot="sidebar-container"] {
+  height: calc(var(--t3p-h) * 1dvh); position: relative; top: calc((var(--t3p-cur) - var(--t3p-h)) * 1dvh);
+}
+@media (prefers-reduced-motion: reduce) { html[data-t3p="top"] { transition: none; } }
 html[data-t3p="top"] [data-slot="sidebar-gap"],
 html[data-t3p="top"] [data-slot="sidebar-rail"] { display: none; }
 html[data-t3p="top"] [data-slot="sidebar-container"] {
-  position: relative; inset: auto; left: auto; right: auto; z-index: auto;
-  display: flex; width: 100%; height: 100%;
+  inset: auto; left: auto; right: auto; z-index: auto;
+  display: flex; width: 100%;
   border-bottom: 1px solid var(--sidebar-border);
 }
 html[data-t3p="top"] [data-slot="sidebar-wrapper"] > [data-slot="sidebar-inset"] { flex: 1 1 0; min-height: 0; }
@@ -62,16 +70,16 @@ html[data-t3p-open] [data-t3p-part="foot"] { grid-area: foot; justify-content: c
 html[data-t3p-open] [data-t3p-part="search"] { grid-area: search; align-self: center; }
 html[data-t3p-open] [data-t3p-part="search"] > [data-slot="sidebar-group"] { padding-block: 0; }
 html[data-t3p-open] [data-t3p-part="nav"] {
-  position: fixed; right: 12px; top: calc(var(--t3p-h) * 1dvh - 44px); height: 44px; z-index: 30;
+  position: fixed; right: 12px; top: calc(var(--t3p-cur) * 1dvh - 44px); height: 44px; z-index: 30;
 }
-html[data-t3p-open] [data-sidebar-control] {
+html[data-t3p-open]:has([data-slot="sidebar"][data-state="expanded"]) [data-sidebar-control] {
   left: 10px; top: calc(var(--t3p-h) * 1dvh - 44px); height: 44px; margin-left: 0;
 }
 /* T3 draws these over a dark title backdrop; in the tool row they sit on the sidebar surface */
-html[data-t3p-open] [data-sidebar-control] button,
+html[data-t3p-open]:has([data-slot="sidebar"][data-state="expanded"]) [data-sidebar-control] button,
 html[data-t3p-open] [data-t3p-part="nav"] button { color: var(--sidebar-foreground) !important; --control-icon-color: var(--sidebar-foreground); }
 html[data-t3p-open] [data-t3p-part="nav"] button:hover,
-html[data-t3p-open] [data-sidebar-control] button:hover { background: var(--sidebar-accent, rgb(0 0 0 / 6%)) !important; }
+html[data-t3p-open]:has([data-slot="sidebar"][data-state="expanded"]) [data-sidebar-control] button:hover { background: var(--sidebar-accent, rgb(0 0 0 / 6%)) !important; }
 
 /* threads in two columns; group headings (working / snoozed / settled) span both,
    and every group keeps its own expand state */
@@ -81,23 +89,28 @@ html[data-t3p-open] [data-slot="sidebar-content"] > [data-slot="sidebar-group"] 
 html[data-t3p-open] [data-slot="sidebar-content"] > [data-slot="sidebar-group"] > ul > li:not([data-thread-item]) {
   grid-column: 1 / -1; margin-top: 0;
 }
-/* two-line cards: project, status, device and agent on the first line, title on the second */
-html[data-t3p-open] [data-testid="sidebar-row-card"] > div:has(> :nth-child(3):last-child) {
-  height: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; align-items: center;
+/* two-line cards: project, device and agent on the first line; title and status on the second */
+html[data-t3p-open] [data-t3p-part="card"] {
+  height: auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: 6px; row-gap: 4px; align-items: center;
 }
-html[data-t3p-open] [data-testid="sidebar-row-card"] > div:has(> :nth-child(3):last-child) > :nth-child(1) { grid-area: 1 / 1; }
-html[data-t3p-open] [data-testid="sidebar-row-card"] > div:has(> :nth-child(3):last-child) > :nth-child(2) { grid-area: 2 / 1 / 3 / 3; }
-html[data-t3p-open] [data-testid="sidebar-row-card"] > div:has(> :nth-child(3):last-child) > :nth-child(3) { grid-area: 1 / 2; margin-top: 0; }
+html[data-t3p-open] [data-t3p-part="card"] > :nth-child(1) { display: contents; }
+/* first row's children: project icon (monogram or image), project name, status slot */
+html[data-t3p-open] [data-t3p-part="card"] > :nth-child(1) > :first-child { grid-area: 1 / 1; }
+html[data-t3p-open] [data-t3p-part="card"] > :nth-child(1) > :not(:first-child):not(:last-child) { grid-area: 1 / 2; min-width: 0; }
+html[data-t3p-open] [data-t3p-part="card"] > :nth-child(1) > :last-child { grid-area: 2 / 3; margin-left: 0; }
+html[data-t3p-open] [data-t3p-part="card"] > :nth-child(2) { grid-area: 2 / 1 / 3 / 3; margin-top: 0; }
+html[data-t3p-open] [data-t3p-part="card"] > :nth-child(3) { grid-area: 1 / 3; margin-top: 0; justify-self: end; }
 
 #t3p-divider {
   display: none; position: fixed; left: 0; right: 0; z-index: 40;
-  top: calc(var(--t3p-h) * 1dvh - 5px); height: 10px; cursor: row-resize; touch-action: none;
+  top: calc(var(--t3p-cur) * 1dvh - 5px); height: 10px; cursor: row-resize; touch-action: none;
 }
 #t3p-divider::after {
   content: ""; position: absolute; left: 0; right: 0; top: 4px; height: 2px;
 }
 #t3p-divider:hover::after, #t3p-divider[data-dragging]::after { background: var(--sidebar-border); }
-html[data-t3p-open] #t3p-divider { display: block; }
+html[data-t3p-open]:has([data-slot="sidebar"][data-state="expanded"]) #t3p-divider { display: block; }
 html[data-t3p="top"] body[data-t3p-resizing] { cursor: row-resize; user-select: none; }
 
 [data-t3p-btn-wrap] { display: none; }
@@ -228,6 +241,10 @@ html[data-t3p] [data-t3p-btn-wrap] { display: flex; }
     mark(search, "search");
     mark(foot, "foot");
     mark(nav, "nav");
+    for (const card of list.querySelectorAll('[data-testid="sidebar-row-card"] > div')) {
+      const rows = card.children;
+      if (rows.length === 3 && rows[0].children.length === 3) mark(card, "card");
+    }
     return true;
   }
 
@@ -255,10 +272,7 @@ html[data-t3p] [data-t3p-btn-wrap] { display: flex; }
     setAttr("data-t3p", mode);
     updateButton();
 
-    const open =
-      mode === "top" &&
-      sidebar.dataset.state !== "collapsed" &&
-      markParts(container.querySelector('[data-slot="sidebar-inner"]') || container);
+    const open = mode === "top" && markParts(container.querySelector('[data-slot="sidebar-inner"]') || container);
     setAttr("data-t3p-open", open ? "" : null);
   }
 
