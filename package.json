@@ -1,0 +1,12 @@
+{
+  "name": "t3code-portrait",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Portrait layout for T3 Code Desktop, injected from outside the app",
+  "type": "module",
+  "engines": { "node": ">=22.4" },
+  "scripts": {
+    "check": "node --check src/injector.mjs && node --check src/page.js"
+  },
+  "license": "MIT"
+}
