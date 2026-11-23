@@ -1,5 +1,5 @@
 // Runs inside T3 Code's window. In a portrait window it moves the sidebar to the top, shows threads
-// in two columns of two-line cards, gathers the sidebar's buttons into one row above the chat title,
+// in two columns of two-line cards (left: top threads and Settled; right: Working and Snoozed), gathers the sidebar's buttons into one row above the chat title,
 // and adds a toggle button to the chat header. Only T3's own DOM markers are used; when they are missing, nothing is changed.
 (() => {
   // The script can run before the page's real document exists, so the guard is per document.
@@ -81,13 +81,16 @@ html[data-t3p-open] [data-t3p-part="nav"] button { color: var(--sidebar-foregrou
 html[data-t3p-open] [data-t3p-part="nav"] button:hover,
 html[data-t3p-open]:has([data-slot="sidebar"][data-state="expanded"]) [data-sidebar-control] button:hover { background: var(--sidebar-accent, rgb(0 0 0 / 6%)) !important; }
 
-/* threads in two columns; group headings (working / snoozed / settled) span both,
-   and every group keeps its own expand state */
-html[data-t3p-open] [data-slot="sidebar-content"] > [data-slot="sidebar-group"] > ul {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 8px; align-content: start;
+/* two columns that stack on their own: left holds the top threads and Settled, right holds
+   Working and Snoozed. 1px rows let each item span its own height, so neither column leaves gaps.
+   Each item's column and height come from script (--t3p-col, --t3p-span). */
+html[data-t3p-open] [data-t3p-part="threads"] {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 8px;
+  grid-auto-rows: 1px; row-gap: 0; grid-auto-flow: row dense; align-items: start;
 }
-html[data-t3p-open] [data-slot="sidebar-content"] > [data-slot="sidebar-group"] > ul > li:not([data-thread-item]) {
-  grid-column: 1 / -1; margin-top: 0;
+html[data-t3p-open] [data-t3p-part="threads"] > li {
+  grid-column: var(--t3p-col, 1); grid-row-end: span var(--t3p-span, 1);
+  margin-top: 0; content-visibility: visible;
 }
 /* two-line cards: project, device and agent on the first line; title and status on the second */
 html[data-t3p-open] [data-t3p-part="card"] {
@@ -241,11 +244,31 @@ html[data-t3p] [data-t3p-btn-wrap] { display: flex; }
     mark(search, "search");
     mark(foot, "foot");
     mark(nav, "nav");
+    const threads = list.querySelector('[data-slot="sidebar-content"] > [data-slot="sidebar-group"] > ul');
+    if (threads) mark(threads, "threads");
     for (const card of list.querySelectorAll('[data-testid="sidebar-row-card"] > div')) {
       const rows = card.children;
       if (rows.length === 3 && rows[0].children.length === 3) mark(card, "card");
     }
     return true;
+  }
+
+  const RIGHT = new Set(["working", "snoozed"]);
+  function setVar(el, name, value) {
+    if (el.style.getPropertyValue(name) !== value) el.style.setProperty(name, value);
+  }
+  // T3 renders the thread list as one flat <ul>: top threads, then each group's heading followed
+  // by its threads. Each item goes to the column of the group it follows.
+  function placeThreads() {
+    const ul = document.querySelector('[data-t3p-part="threads"]');
+    if (!ul) return;
+    let group = "top";
+    for (const li of ul.children) {
+      const m = /^sidebar-(\w+)-header$/.exec(li.dataset.testid || "");
+      if (m && m[1] !== "pinned") group = m[1];
+      setVar(li, "--t3p-col", RIGHT.has(group) ? "2" : "1");
+      setVar(li, "--t3p-span", String(Math.max(1, Math.ceil(li.getBoundingClientRect().height))));
+    }
   }
 
   function sync() {
@@ -274,6 +297,7 @@ html[data-t3p] [data-t3p-btn-wrap] { display: flex; }
 
     const open = mode === "top" && markParts(container.querySelector('[data-slot="sidebar-inner"]') || container);
     setAttr("data-t3p-open", open ? "" : null);
+    if (open) placeThreads();
   }
 
   let queued = false;
