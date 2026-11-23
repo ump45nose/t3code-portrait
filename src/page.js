@@ -1,6 +1,6 @@
-// Runs inside T3 Code's window. In a portrait window it moves the sidebar to the top (two columns),
-// puts the sidebar's search row and footer buttons under the composer, and adds a toggle button to
-// the chat header. Only T3's own DOM markers are used; when they are missing, nothing is changed.
+// Runs inside T3 Code's window. In a portrait window it moves the sidebar to the top, shows threads
+// in two columns of two-line cards, gathers the sidebar's buttons into one row above the chat title,
+// and adds a toggle button to the chat header. Only T3's own DOM markers are used; when they are missing, nothing is changed.
 (() => {
   // The script can run before the page's real document exists, so the guard is per document.
   if (document.__t3portrait) return;
@@ -43,25 +43,51 @@ html[data-t3p="top"] [data-slot="sidebar-container"] {
 }
 html[data-t3p="top"] [data-slot="sidebar-wrapper"] > [data-slot="sidebar-inset"] { flex: 1 1 0; min-height: 0; }
 html[data-t3p="top"] [data-workspace-titlebar-controls] { position: absolute; }
+/* the sidebar toggle points up/down instead of left/right */
+html[data-t3p="top"] [data-sidebar-control] svg { transform: rotate(90deg); }
 
-/* two columns: threads on the left, status groups (working / snoozed / settled) on the right */
-html[data-t3p="top"] [data-slot="sidebar-content"] > [data-slot="sidebar-group"] > ul {
-  display: block; columns: 2; column-gap: 12px;
+/* title row, thread list, then one tool row right above the chat title:
+   [toggle] footer buttons | search, filter, add project, new thread | back, forward */
+html[data-t3p-open] [data-t3p-part="wrap"] {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) 76px;
+  grid-template-rows: auto minmax(0, 1fr) 44px;
+  grid-template-areas: "head head head" "list list list" "foot search nav";
 }
-html[data-t3p="top"] [data-slot="sidebar-content"] > [data-slot="sidebar-group"] > ul > li { break-inside: avoid; }
-html[data-t3p="top"] [data-slot="sidebar-content"] > [data-slot="sidebar-group"] > ul > li:nth-child(1 of [data-testid^="sidebar-"][data-testid$="-header"]:not([data-testid="sidebar-pinned-header"])) {
-  break-before: column; margin-top: 0;
+html[data-t3p-open] [data-t3p-part="head"] {
+  grid-area: head;
+  --workspace-titlebar-content-left: calc(var(--workspace-controls-left) + 4px);
 }
+html[data-t3p-open] [data-t3p-part="list"] { grid-area: list; height: auto; border-bottom: 1px solid var(--sidebar-border); }
+html[data-t3p-open] [data-t3p-part="foot"] { grid-area: foot; justify-content: center; padding: 0 4px 0 44px; }
+html[data-t3p-open] [data-t3p-part="search"] { grid-area: search; align-self: center; }
+html[data-t3p-open] [data-t3p-part="search"] > [data-slot="sidebar-group"] { padding-block: 0; }
+html[data-t3p-open] [data-t3p-part="nav"] {
+  position: fixed; right: 12px; top: calc(var(--t3p-h) * 1dvh - 44px); height: 44px; z-index: 30;
+}
+html[data-t3p-open] [data-sidebar-control] {
+  left: 10px; top: calc(var(--t3p-h) * 1dvh - 44px); height: 44px; margin-left: 0;
+}
+/* T3 draws these over a dark title backdrop; in the tool row they sit on the sidebar surface */
+html[data-t3p-open] [data-sidebar-control] button,
+html[data-t3p-open] [data-t3p-part="nav"] button { color: var(--sidebar-foreground) !important; --control-icon-color: var(--sidebar-foreground); }
+html[data-t3p-open] [data-t3p-part="nav"] button:hover,
+html[data-t3p-open] [data-sidebar-control] button:hover { background: var(--sidebar-accent, rgb(0 0 0 / 6%)) !important; }
 
-/* search row and footer buttons under the composer */
-html[data-t3p-bar] [data-chat-composer-overlay] { padding-bottom: 40px; }
-html[data-t3p-bar] [data-t3p-foot],
-html[data-t3p-bar] [data-t3p-search] {
-  position: fixed; bottom: 8px; z-index: 30; padding: 0;
+/* threads in two columns; group headings (working / snoozed / settled) span both,
+   and every group keeps its own expand state */
+html[data-t3p-open] [data-slot="sidebar-content"] > [data-slot="sidebar-group"] > ul {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 8px; align-content: start;
 }
-html[data-t3p-bar] [data-t3p-foot] { left: var(--t3p-bl); width: auto; }
-html[data-t3p-bar] [data-t3p-search] { right: var(--t3p-br); width: min(340px, 45vw); }
-html[data-t3p-bar] [data-t3p-search] [data-slot="sidebar-group"] { padding: 0; }
+html[data-t3p-open] [data-slot="sidebar-content"] > [data-slot="sidebar-group"] > ul > li:not([data-thread-item]) {
+  grid-column: 1 / -1; margin-top: 0;
+}
+/* two-line cards: project, status, device and agent on the first line, title on the second */
+html[data-t3p-open] [data-testid="sidebar-row-card"] > div:has(> :nth-child(3):last-child) {
+  height: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; align-items: center;
+}
+html[data-t3p-open] [data-testid="sidebar-row-card"] > div:has(> :nth-child(3):last-child) > :nth-child(1) { grid-area: 1 / 1; }
+html[data-t3p-open] [data-testid="sidebar-row-card"] > div:has(> :nth-child(3):last-child) > :nth-child(2) { grid-area: 2 / 1 / 3 / 3; }
+html[data-t3p-open] [data-testid="sidebar-row-card"] > div:has(> :nth-child(3):last-child) > :nth-child(3) { grid-area: 1 / 2; margin-top: 0; }
 
 #t3p-divider {
   display: none; position: fixed; left: 0; right: 0; z-index: 40;
@@ -71,8 +97,7 @@ html[data-t3p-bar] [data-t3p-search] [data-slot="sidebar-group"] { padding: 0; }
   content: ""; position: absolute; left: 0; right: 0; top: 4px; height: 2px;
 }
 #t3p-divider:hover::after, #t3p-divider[data-dragging]::after { background: var(--sidebar-border); }
-html[data-t3p="top"] #t3p-divider { display: block; }
-html[data-t3p="top"]:has([data-slot="sidebar"][data-state="collapsed"]) #t3p-divider { display: none; }
+html[data-t3p-open] #t3p-divider { display: block; }
 html[data-t3p="top"] body[data-t3p-resizing] { cursor: row-resize; user-select: none; }
 
 [data-t3p-btn-wrap] { display: none; }
@@ -178,18 +203,32 @@ html[data-t3p] [data-t3p-btn-wrap] { display: flex; }
     } else if (html().getAttribute(name) !== value) html().setAttribute(name, value);
   }
 
-  function mark(el, name) {
-    if (el && !el.hasAttribute(name)) el.setAttribute(name, "");
+  function mark(el, part) {
+    if (el && el.getAttribute("data-t3p-part") !== part) el.setAttribute("data-t3p-part", part);
   }
 
-  let barLeft = "";
-  let barRight = "";
-  function placeBar(composer) {
-    const r = composer.getBoundingClientRect();
-    const l = `${Math.max(12, Math.round(r.left))}px`;
-    const rr = `${Math.max(12, Math.round(window.innerWidth - r.right))}px`;
-    if (l !== barLeft) html().style.setProperty("--t3p-bl", (barLeft = l));
-    if (rr !== barRight) html().style.setProperty("--t3p-br", (barRight = rr));
+  // Tags the parts of T3's sidebar that the stylesheet arranges. Returns false when one is missing.
+  function markParts(inner) {
+    const foot = inner.querySelector('[data-slot="sidebar-footer"]');
+    const wrap = foot?.parentElement;
+    if (!wrap || !inner.contains(wrap)) return false;
+    let head = null;
+    let list = null;
+    let search = null;
+    for (const child of wrap.children) {
+      if (child.querySelector('[data-slot="sidebar-content"]')) list = child;
+      else if (child.querySelector('input[data-slot="input"]')) search = child;
+      else if (child !== foot && !head) head = child;
+    }
+    const nav = head?.querySelector('button[data-slot="tooltip-trigger"]:not([data-sidebar])')?.parentElement;
+    if (!head || !list || !search || !nav) return false;
+    mark(wrap, "wrap");
+    mark(head, "head");
+    mark(list, "list");
+    mark(search, "search");
+    mark(foot, "foot");
+    mark(nav, "nav");
+    return true;
   }
 
   function sync() {
@@ -199,7 +238,7 @@ html[data-t3p] [data-t3p-btn-wrap] { display: flex; }
     const portrait = window.innerHeight > window.innerWidth && window.innerWidth >= MIN_WIDTH;
     if (!wrapper || !portrait) {
       setAttr("data-t3p", null);
-      setAttr("data-t3p-bar", null);
+      setAttr("data-t3p-open", null);
       return;
     }
 
@@ -216,23 +255,11 @@ html[data-t3p] [data-t3p-btn-wrap] { display: flex; }
     setAttr("data-t3p", mode);
     updateButton();
 
-    let bar = false;
-    if (mode === "top" && sidebar.dataset.state !== "collapsed") {
-      const inner = container.querySelector('[data-slot="sidebar-inner"]');
-      const foot = inner?.querySelector(':scope > [data-slot="sidebar-footer"], :scope > * > [data-slot="sidebar-footer"]');
-      const search = inner
-        ?.querySelector('[data-slot="sidebar-group"] [data-slot="input"]')
-        ?.closest('[data-slot="sidebar-group"]')?.parentElement;
-      const composer = document.querySelector("[data-chat-composer-stack]");
-      if (composer && (foot || search)) {
-        // the search row lives outside the scrolling list; never move anything inside the list
-        if (search && !search.closest('[data-slot="sidebar-content"]')) mark(search, "data-t3p-search");
-        mark(foot, "data-t3p-foot");
-        placeBar(composer);
-        bar = true;
-      }
-    }
-    setAttr("data-t3p-bar", bar ? "" : null);
+    const open =
+      mode === "top" &&
+      sidebar.dataset.state !== "collapsed" &&
+      markParts(container.querySelector('[data-slot="sidebar-inner"]') || container);
+    setAttr("data-t3p-open", open ? "" : null);
   }
 
   let queued = false;
