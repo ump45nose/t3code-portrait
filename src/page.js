@@ -263,6 +263,7 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
   --t3p-cache-hi: #2e8555; --t3p-cache-mid: #6b8e3d;
   --t3p-ctx-lo: #4a7fb0; --t3p-ctx-mid: #28578a;
   --t3p-quota-lo: #c6613f; --t3p-quota-mid: #b54d24; --t3p-quota-in: #9c6b49;
+  --t3p-spend: #736b5e;
   --t3p-warn: #c27824; --t3p-danger: #c04632;
   --t3p-track: color-mix(in srgb, var(--foreground) 13%, transparent);
 }
@@ -270,6 +271,7 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
   --t3p-cache-hi: #57c98a; --t3p-cache-mid: #9ec466;
   --t3p-ctx-lo: #78b0e3; --t3p-ctx-mid: #5390d9;
   --t3p-quota-lo: #d97757; --t3p-quota-mid: #e86b3a; --t3p-quota-in: #c49a7c;
+  --t3p-spend: #a8a093;
   --t3p-warn: #e39d4b; --t3p-danger: #e8705e;
   --t3p-track: color-mix(in srgb, var(--foreground) 18%, transparent);
 }
@@ -293,6 +295,8 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
 .t3p-tel-btn[data-kind="ctx"][data-tone="mid"] .val { color: var(--t3p-ctx-mid); }
 .t3p-tel-btn[data-kind="quota"][data-tone="normal"] .val { color: var(--t3p-quota-lo); }
 .t3p-tel-btn[data-kind="quota"][data-tone="mid"] .val { color: var(--t3p-quota-mid); }
+.t3p-tel-btn[data-kind="spend"] .val { color: var(--t3p-spend); font-weight: 500; }
+.t3p-tel-btn[data-kind="spend"] .sep { opacity: 0.45; margin: 0 1px; }
 .t3p-tel-btn[data-tone="warn"] .val { color: var(--t3p-warn); }
 .t3p-tel-btn[data-tone="danger"] .val { color: var(--t3p-danger); }
 .t3p-tel-btn[data-tone="na"] { opacity: 0.48; }
@@ -527,6 +531,15 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
     return remH ? `${days}d ${remH}h 后重置` : `${days}d 后重置`;
   };
 
+  const fmtCost = (cost) => {
+    if (!cost || typeof cost.amount !== "number" || !Number.isFinite(cost.amount)) return null;
+    const cur = (cost.currency || "USD").toUpperCase();
+    const sym = cur === "USD" ? "$" : cur === "CNY" ? "¥" : cur === "EUR" ? "€" : "";
+    const suf = sym ? "" : ` ${cur}`;
+    if (cost.amount > 0 && cost.amount < 0.01) return `<${sym}0.01${suf}`;
+    return `${sym}${cost.amount.toFixed(2)}${suf}`;
+  };
+
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   function readTelemetry() {
@@ -538,6 +551,7 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
     let contextWindow = null;
     let providers = null;
     let sources = null;
+    let providerTurns = null;
     let providerInstanceId = null;
     let model = null;
 
@@ -554,6 +568,9 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
           } else if (Array.isArray(v) && v.length > 0 && v[0] && typeof v[0] === "object") {
             if (!providers && "instanceId" in v[0] && "driver" in v[0]) providers = v;
             else if (!sources && "accounts" in v[0] && Array.isArray(v[0].accounts)) sources = v;
+            else if (!providerTurns && "providerThreadId" in v[0] && "runAttemptId" in v[0] && "ordinal" in v[0]) {
+              providerTurns = v;
+            }
           } else if (v.props?.usage && typeof v.props.usage === "object") {
             const u = v.props.usage;
             if (u.providerInstanceId) providerInstanceId = u.providerInstanceId;
@@ -561,6 +578,8 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
             if (u.contextWindow) contextWindow = u.contextWindow;
             if (Array.isArray(u.providers)) providers = u.providers;
             if (Array.isArray(u.sources)) sources = u.sources;
+          } else if ("providerTurns" in v && Array.isArray(v.providerTurns) && !providerTurns) {
+            providerTurns = v.providerTurns;
           } else if ("usageLimitSources" in v && Array.isArray(v.usageLimitSources) && !sources) {
             sources = v.usageLimitSources;
           } else if (!providerInstanceId && "providerInstanceId" in v && "model" in v && typeof v.providerInstanceId === "string") {
@@ -569,7 +588,7 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
           }
         }
       }
-      if (contextWindow && providers) break;
+      if (contextWindow && providers && providerTurns) break;
     }
 
     // Fallback: infer active provider from composer model button aria-label if not directly captured
@@ -583,7 +602,14 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
       else if (/grok/.test(aria)) providerInstanceId = "grok";
     }
 
-    return { contextWindow, providers: providers || [], sources: sources || [], providerInstanceId, model };
+    return {
+      contextWindow,
+      providers: providers || [],
+      sources: sources || [],
+      providerTurns: providerTurns || [],
+      providerInstanceId,
+      model,
+    };
   }
 
   function pctTone(pct, isCache = false) {
@@ -677,27 +703,110 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
     };
   }
 
+  function summarizeSessionSpend(raw) {
+    const turns = raw?.providerTurns || [];
+    const cw = raw?.contextWindow || null;
+    let countedTurns = 0;
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let cachedInputTokens = 0;
+    let hasCached = false;
+    let cacheCreationTokens = 0;
+    let hasCacheWrite = false;
+    let reasoningTokens = 0;
+    let hasReasoning = false;
+    let latestTurnUsage = null;
+
+    for (const t of turns) {
+      const u = t?.turnTokenUsage;
+      if (!u || u.usageStatus === "unavailable" || typeof u.inputTokens !== "number") continue;
+      countedTurns++;
+      inputTokens += u.inputTokens;
+      outputTokens += typeof u.outputTokens === "number" ? u.outputTokens : 0;
+      if (typeof u.cachedInputTokens === "number") {
+        cachedInputTokens += u.cachedInputTokens;
+        hasCached = true;
+      }
+      if (typeof u.cacheCreationTokens === "number") {
+        cacheCreationTokens += u.cacheCreationTokens;
+        hasCacheWrite = true;
+      }
+      if (typeof u.reasoningTokens === "number") {
+        reasoningTokens += u.reasoningTokens;
+        hasReasoning = true;
+      }
+      latestTurnUsage = u;
+    }
+
+    let totalTokens = null;
+    let source = "暂无";
+    if (countedTurns > 0) {
+      totalTokens = inputTokens + outputTokens;
+      source = `共 ${countedTurns} 轮累计`;
+    } else if (cw) {
+      if (typeof cw.totalProcessedTokens === "number" && cw.totalProcessedTokens > 0) {
+        totalTokens = cw.totalProcessedTokens;
+        source = "会话总计";
+      } else if (typeof cw.inputTokens === "number" || typeof cw.outputTokens === "number") {
+        inputTokens = cw.inputTokens ?? 0;
+        outputTokens = cw.outputTokens ?? 0;
+        totalTokens = inputTokens + outputTokens;
+        if (typeof cw.cachedInputTokens === "number") {
+          cachedInputTokens = cw.cachedInputTokens;
+          hasCached = true;
+        }
+        if (typeof cw.reasoningOutputTokens === "number") {
+          reasoningTokens = cw.reasoningOutputTokens;
+          hasReasoning = true;
+        }
+        source = "会话累计";
+      } else if (typeof cw.usedTokens === "number" && cw.usedTokens > 0) {
+        totalTokens = cw.usedTokens;
+        source = "当前上下文";
+      }
+    }
+
+    const cost = cw?.cost && typeof cw.cost.amount === "number" ? cw.cost : null;
+    return {
+      totalTokens,
+      inputTokens: countedTurns > 0 || cw?.inputTokens != null ? inputTokens : null,
+      outputTokens: countedTurns > 0 || cw?.outputTokens != null ? outputTokens : null,
+      cachedInputTokens: hasCached ? cachedInputTokens : null,
+      cacheCreationTokens: hasCacheWrite ? cacheCreationTokens : null,
+      reasoningTokens: hasReasoning ? reasoningTokens : null,
+      countedTurns,
+      source,
+      cost,
+      latestTurnUsage,
+    };
+  }
+
   function buildTelemetryModel(raw) {
     const cw = raw?.contextWindow || null;
-    // Cache hit: prefer last turn (lastCachedInputTokens / lastInputTokens), fall back to session cumulative
+    const spend = summarizeSessionSpend(raw);
+
+    // Cache hit: prefer last turn (contextWindow.last* or latest providerTurn.turnTokenUsage), fall back to cumulative
     let cachePct = null;
     let cacheScope = "暂无";
     let lastPct = null;
     let totalPct = null;
-    if (cw) {
-      if (cw.lastInputTokens > 0 && cw.lastCachedInputTokens != null) {
-        lastPct = Math.round(Math.min(100, Math.max(0, (cw.lastCachedInputTokens / cw.lastInputTokens) * 100)));
-      }
-      if (cw.inputTokens > 0 && cw.cachedInputTokens != null) {
-        totalPct = Math.round(Math.min(100, Math.max(0, (cw.cachedInputTokens / cw.inputTokens) * 100)));
-      }
-      if (lastPct !== null) {
-        cachePct = lastPct;
-        cacheScope = "最近一轮";
-      } else if (totalPct !== null) {
-        cachePct = totalPct;
-        cacheScope = "会话累计";
-      }
+    const lt = spend.latestTurnUsage;
+    if (cw && cw.lastInputTokens > 0 && cw.lastCachedInputTokens != null) {
+      lastPct = Math.round(Math.min(100, Math.max(0, (cw.lastCachedInputTokens / cw.lastInputTokens) * 100)));
+    } else if (lt && lt.inputTokens > 0 && lt.cachedInputTokens != null) {
+      lastPct = Math.round(Math.min(100, Math.max(0, (lt.cachedInputTokens / lt.inputTokens) * 100)));
+    }
+    if (cw && cw.inputTokens > 0 && cw.cachedInputTokens != null) {
+      totalPct = Math.round(Math.min(100, Math.max(0, (cw.cachedInputTokens / cw.inputTokens) * 100)));
+    } else if (spend.inputTokens > 0 && spend.cachedInputTokens != null) {
+      totalPct = Math.round(Math.min(100, Math.max(0, (spend.cachedInputTokens / spend.inputTokens) * 100)));
+    }
+    if (lastPct !== null) {
+      cachePct = lastPct;
+      cacheScope = "最近一轮";
+    } else if (totalPct !== null) {
+      cachePct = totalPct;
+      cacheScope = "会话累计";
     }
 
     // Context window
@@ -711,9 +820,10 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
 
     const quota = raw ? pickQuotaGroups(raw) : { driver: "", groups: [], unavailable: null };
     return {
-      cache: { pct: cachePct, scope: cacheScope, lastPct, totalPct, cw },
+      cache: { pct: cachePct, scope: cacheScope, lastPct, totalPct, cw, lt },
       ctx: { pct: ctxPct, cw },
       quota,
+      spend,
     };
   }
 
@@ -848,22 +958,44 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
     let htmlStr = "";
     if (telOpenKind === "cache") {
       const cw = d.cache.cw;
+      const lt = d.cache.lt;
       const rows = [];
       if (d.cache.lastPct !== null) rows.push(["最近一轮命中率", `${d.cache.lastPct}%`]);
       if (d.cache.totalPct !== null) rows.push(["会话累计命中率", `${d.cache.totalPct}%`]);
       if (cw?.lastInputTokens > 0) {
         rows.push(["本轮缓存读取", `${fmtTokens(cw.lastCachedInputTokens)} / ${fmtTokens(cw.lastInputTokens)}`]);
+      } else if (lt?.inputTokens > 0 && lt.cachedInputTokens != null) {
+        rows.push(["本轮缓存读取", `${fmtTokens(lt.cachedInputTokens)} / ${fmtTokens(lt.inputTokens)}`]);
       }
       if (cw?.inputTokens > 0) {
         rows.push(["累计缓存读取", `${fmtTokens(cw.cachedInputTokens)} / ${fmtTokens(cw.inputTokens)}`]);
+      } else if (d.spend.inputTokens > 0 && d.spend.cachedInputTokens != null) {
+        rows.push(["累计缓存读取", `${fmtTokens(d.spend.cachedInputTokens)} / ${fmtTokens(d.spend.inputTokens)}`]);
       }
-      if (cw?.outputTokens != null) rows.push(["输出 tokens", fmtTokens(cw.outputTokens)]);
+      if (cw?.outputTokens != null || d.spend.outputTokens != null) {
+        rows.push(["输出 tokens", fmtTokens(cw?.outputTokens ?? d.spend.outputTokens)]);
+      }
       if (rows.length === 0) rows.push(["状态", "首轮回复完成后开始统计"]);
       htmlStr =
         `<div class="pt"><span>会话缓存命中</span><small>${esc(d.cache.scope)}</small></div>` +
         (d.cache.pct != null ? `<div class="pb"><i style="width:${d.cache.pct}%"></i></div>` : "") +
         rows.map(([k, v]) => `<div class="pr"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("") +
         `<div class="pf">默认优先显示最近一轮命中率，未拆分时回退到会话累计</div>`;
+    } else if (telOpenKind === "spend") {
+      const sp = d.spend;
+      const rows = [];
+      rows.push(["累计消耗 Token", fmtTokens(sp.totalTokens)]);
+      if (sp.inputTokens != null) rows.push(["总输入", fmtTokens(sp.inputTokens)]);
+      if (sp.cachedInputTokens != null) rows.push(["其中缓存读取", fmtTokens(sp.cachedInputTokens)]);
+      if (sp.cacheCreationTokens != null) rows.push(["其中缓存写入", fmtTokens(sp.cacheCreationTokens)]);
+      if (sp.outputTokens != null) rows.push(["总输出", fmtTokens(sp.outputTokens)]);
+      if (sp.reasoningTokens != null) rows.push(["其中思考输出", fmtTokens(sp.reasoningTokens)]);
+      const costStr = fmtCost(sp.cost);
+      rows.push(["当前会话花费", costStr ?? "—（服务商未上报）"]);
+      htmlStr =
+        `<div class="pt"><span>当前会话消耗</span><small>${esc(sp.source)}</small></div>` +
+        rows.map(([k, v]) => `<div class="pr"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("") +
+        `<div class="pf">Token 为本会话各轮输入与输出总计；花费直接读取服务商上报金额</div>`;
     } else if (telOpenKind === "ctx") {
       const cw = d.ctx.cw;
       const rows = [];
@@ -954,7 +1086,15 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
       quotaHtml = parts.join("");
     }
 
-    const sig = `${cacheText}|${cacheTone}|${ctxText}|${ctxTone}|${quotaTone}|${quotaHtml}`;
+    const spendTok = fmtTokens(model.spend.totalTokens);
+    const spendCost = fmtCost(model.spend.cost);
+    const spendTone = model.spend.totalTokens != null || spendCost != null ? "normal" : "na";
+    const spendHtml =
+      model.spend.totalTokens != null || spendCost != null
+        ? `<span class="val">Σ ${esc(spendTok)}<span class="sep">·</span>${esc(spendCost ?? "—")}</span>`
+        : `<span class="val">Σ —</span>`;
+
+    const sig = `${cacheText}|${cacheTone}|${ctxText}|${ctxTone}|${quotaTone}|${quotaHtml}|${spendTone}|${spendHtml}`;
     lastTelData = model;
     if (sig !== lastTelSig) {
       lastTelSig = sig;
@@ -964,7 +1104,9 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
         `<button type="button" class="t3p-tel-btn" data-kind="ctx" data-tone="${ctxTone}" title="上下文使用率，点击查看详情">` +
         `${singleRingSvg(model.ctx.pct, ctxTone, "ctx")}<span class="val">${ctxText}</span></button>` +
         `<button type="button" class="t3p-tel-btn" data-kind="quota" data-tone="${quotaTone}" title="额度使用率，点击查看详情">` +
-        `${quotaHtml}</button>`;
+        `${quotaHtml}</button>` +
+        `<button type="button" class="t3p-tel-btn" data-kind="spend" data-tone="${spendTone}" title="当前会话累计消耗 Token 与花费金额，点击查看明细">` +
+        `${spendHtml}</button>`;
     }
     if (telOpenKind) renderTelPopover(null);
   }

@@ -21,9 +21,10 @@ When the T3 Code window is taller than it is wide:
 - a button in the chat header, left of T3's own panel buttons, turns the layout on and off.
 
 In both portrait and landscape windows, a compact status strip under the composer shows the session's
-cache hit rate (preferring the latest turn), a context window percentage ring, and quota rings
+cache hit rate (preferring the latest turn), a context window percentage ring, quota rings
 (single ring for weekly-only providers, concentric dual ring for 5h + weekly, and two dual rings for
-Antigravity where an exhausted weekly window clears its paired 5h reading).
+Antigravity where an exhausted weekly window clears its paired 5h reading), and the session's
+cumulative token usage and reported cost.
 
 In a landscape window the layout itself is unchanged. T3's own sidebar toggle still hides the sidebar. If T3 Code
 changes its interface and the sidebar can't be found, the layout is left alone and the button is
