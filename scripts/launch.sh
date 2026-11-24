@@ -19,6 +19,17 @@ start_injector() {
   pgrep -fq -- "injector.mjs --port $PORT" && return
   nohup "$NODE" "$INJECTOR" --port "$PORT" >>"$LOG" 2>&1 &
 }
+stop_standalone_t3_serve() {
+  local pids
+  pids=$(pgrep -f -- "$HOME/.t3/runtime/versions/.*/t3 serve" 2>/dev/null || true)
+  [ -n "$pids" ] || return 0
+  kill $pids 2>/dev/null || true
+  for _ in $(seq 1 20); do
+    pgrep -fq -- "$HOME/.t3/runtime/versions/.*/t3 serve" || return 0
+    sleep 0.1
+  done
+  kill -9 $pids 2>/dev/null || true
+}
 
 if port_open; then
   start_injector
@@ -37,5 +48,6 @@ if t3_running; then
   fi
 fi
 
+stop_standalone_t3_serve
 open -a "$T3_APP" --args --remote-debugging-port="$PORT"
 start_injector
