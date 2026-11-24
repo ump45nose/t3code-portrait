@@ -6,7 +6,8 @@ import { readFileSync } from "node:fs";
 
 const args = process.argv.slice(2);
 const port = Number(args[args.indexOf("--port") + 1] || 9338);
-const source = readFileSync(new URL("./page.js", import.meta.url), "utf8");
+const pageUrl = new URL("./page.js", import.meta.url);
+const loadSource = () => readFileSync(pageUrl, "utf8");
 const APP_URL = "t3code://app";
 
 const log = (...parts) => console.log(new Date().toISOString(), ...parts);
@@ -44,6 +45,7 @@ async function inject(targetInfo) {
   try {
     const { sessionId } = await send("Target.attachToTarget", { targetId: targetInfo.targetId, flatten: true });
     await send("Page.enable", {}, sessionId);
+    const source = loadSource();
     await send("Page.addScriptToEvaluateOnNewDocument", { source }, sessionId);
     const r = await send("Runtime.evaluate", { expression: source }, sessionId);
     if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description || r.exceptionDetails.text);
