@@ -330,23 +330,73 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
 .t3p-qtag { font-size: 10px; font-weight: 600; color: var(--muted-foreground); letter-spacing: 0.02em; }
 
 #t3p-tel-pop {
-  position: fixed; z-index: 90; width: 264px; display: none;
-  padding: 12px 14px; border-radius: 12px;
+  position: fixed; z-index: 90; width: min(352px, calc(100vw - 20px)); display: none;
+  padding: 14px 16px; border-radius: 14px;
   background: var(--popover, var(--background));
   color: var(--popover-foreground, var(--foreground));
   border: 1px solid var(--border);
-  box-shadow: 0 12px 32px rgb(0 0 0 / 16%);
+  box-shadow: 0 14px 36px rgb(0 0 0 / 16%);
   font-size: 12px; line-height: 1.5; font-variant-numeric: tabular-nums;
+  --t3p-pop-green: #2e8555; --t3p-pop-blue: #4a7fb0; --t3p-pop-orange: #c6613f;
+  --t3p-pop-warn: #c27824; --t3p-pop-danger: #c04632;
+  --t3p-pop-track: color-mix(in srgb, var(--foreground) 12%, transparent);
 }
-.dark #t3p-tel-pop { box-shadow: 0 14px 36px rgb(0 0 0 / 48%); }
-#t3p-tel-pop[data-open] { display: grid; gap: 8px; }
-#t3p-tel-pop .pt { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; font-size: 12.5px; }
-#t3p-tel-pop .pt small { font-weight: 400; font-size: 11px; color: var(--muted-foreground); }
-#t3p-tel-pop .pr { display: flex; justify-content: space-between; gap: 10px; color: var(--muted-foreground); }
-#t3p-tel-pop .pr b { color: var(--foreground); font-weight: 500; text-align: right; }
-#t3p-tel-pop .pb { height: 5px; border-radius: 99px; background: var(--t3p-track, rgb(128 128 128 / 20%)); overflow: hidden; }
-#t3p-tel-pop .pb > i { display: block; height: 100%; border-radius: 99px; background: var(--info, #c6613f); }
-#t3p-tel-pop .pf { font-size: 11px; color: var(--muted-foreground); border-top: 1px solid var(--border); padding-top: 7px; }
+.dark #t3p-tel-pop {
+  box-shadow: 0 16px 40px rgb(0 0 0 / 50%);
+  --t3p-pop-green: #57c98a; --t3p-pop-blue: #78b0e3; --t3p-pop-orange: #d97757;
+  --t3p-pop-warn: #e39d4b; --t3p-pop-danger: #e8705e;
+  --t3p-pop-track: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+#t3p-tel-pop[data-open] { display: grid; gap: 10px; }
+#t3p-tel-pop .psec { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+#t3p-tel-pop .psec b { font-size: 13px; font-weight: 600; color: var(--foreground); }
+#t3p-tel-pop .psec small { font-size: 11.5px; color: var(--muted-foreground); }
+#t3p-tel-pop .phr { height: 1px; background: var(--border); margin: -2px 0; }
+#t3p-tel-pop .pr { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted-foreground); }
+#t3p-tel-pop .pr b { color: var(--foreground); font-weight: 600; text-align: right; }
+#t3p-tel-pop .pr .dim { color: var(--muted-foreground); font-weight: 400; margin: 0 4px; }
+#t3p-tel-pop .ppill {
+  display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 6px;
+  font-size: 11.5px; font-weight: 600; margin-left: 6px;
+  color: var(--t3p-pop-green);
+  background: color-mix(in srgb, var(--t3p-pop-green) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--t3p-pop-green) 32%, transparent);
+}
+#t3p-tel-pop .ppill[data-tone="warn"] {
+  color: var(--t3p-pop-warn);
+  background: color-mix(in srgb, var(--t3p-pop-warn) 14%, transparent);
+  border-color: color-mix(in srgb, var(--t3p-pop-warn) 32%, transparent);
+}
+#t3p-tel-pop .ppill[data-tone="danger"] {
+  color: var(--t3p-pop-danger);
+  background: color-mix(in srgb, var(--t3p-pop-danger) 14%, transparent);
+  border-color: color-mix(in srgb, var(--t3p-pop-danger) 32%, transparent);
+}
+#t3p-tel-pop .psplit { display: flex; align-items: center; gap: 7px; flex: 1; justify-content: flex-end; min-width: 0; }
+#t3p-tel-pop .psplit-bar {
+  flex: 0 1 96px; min-width: 48px; height: 7px; border-radius: 99px; overflow: hidden;
+  display: flex; background: var(--t3p-pop-track);
+}
+#t3p-tel-pop .psplit-think { background: var(--t3p-pop-orange); height: 100%; }
+#t3p-tel-pop .psplit-body { background: var(--t3p-pop-blue); height: 100%; }
+#t3p-tel-pop .pctx-row { display: flex; align-items: center; gap: 8px; }
+#t3p-tel-pop .pb { flex: 1; min-width: 60px; height: 7px; border-radius: 99px; background: var(--t3p-pop-track); overflow: hidden; }
+#t3p-tel-pop .pb > i { display: block; height: 100%; border-radius: 99px; background: var(--t3p-pop-blue); }
+#t3p-tel-pop .pb > i[data-tone="warn"] { background: var(--t3p-pop-warn); }
+#t3p-tel-pop .pb > i[data-tone="danger"] { background: var(--t3p-pop-danger); }
+#t3p-tel-pop .pf { font-size: 11px; color: var(--muted-foreground); border-top: 1px solid var(--border); padding-top: 7px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+#t3p-tel-pop .pq-group { display: grid; gap: 8px; }
+#t3p-tel-pop .pq-gtitle { font-size: 12.5px; font-weight: 600; color: var(--foreground); margin-top: 2px; }
+#t3p-tel-pop .pq-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#t3p-tel-pop .pq-left { display: grid; gap: 1px; }
+#t3p-tel-pop .pq-name { color: var(--foreground); font-size: 12.5px; }
+#t3p-tel-pop .pq-reset { color: var(--muted-foreground); font-size: 11px; }
+#t3p-tel-pop .pq-right { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--foreground); }
+#t3p-tel-pop .pq-ring { width: 18px; height: 18px; transform: rotate(-90deg); flex: none; }
+#t3p-tel-pop .pq-ring .trk { fill: none; stroke: var(--t3p-pop-track); stroke-width: 2.3; }
+#t3p-tel-pop .pq-ring .arc { fill: none; stroke: var(--t3p-pop-green); stroke-width: 2.3; stroke-linecap: round; }
+#t3p-tel-pop .pq-ring .arc[data-tone="warn"] { stroke: var(--t3p-pop-warn); }
+#t3p-tel-pop .pq-ring .arc[data-tone="danger"] { stroke: var(--t3p-pop-danger); }
 `;
 
   const ICON =
@@ -522,13 +572,34 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
     const ms = Date.parse(iso) - Date.now();
     if (!Number.isFinite(ms) || ms <= 0) return "即将重置";
     const mins = Math.round(ms / 60_000);
-    if (mins < 60) return `${mins}m 后重置`;
+    if (mins < 60) return `${mins} 分钟后重置`;
     const hrs = Math.floor(mins / 60);
     const remM = mins % 60;
-    if (hrs < 24) return remM ? `${hrs}h ${remM}m 后重置` : `${hrs}h 后重置`;
+    if (hrs < 24) return remM ? `${hrs} 小时 ${remM} 分钟后重置` : `${hrs} 小时后重置`;
     const days = Math.floor(hrs / 24);
     const remH = hrs % 24;
-    return remH ? `${days}d ${remH}h 后重置` : `${days}d 后重置`;
+    return remH ? `${days} 天 ${remH} 小时后重置` : `${days} 天后重置`;
+  };
+
+  const fmtSec = (s) => {
+    if (s == null || !Number.isFinite(s) || s < 0) return "—";
+    if (s >= 100) return `${Math.round(s)}s`;
+    if (s >= 10) return `${s.toFixed(2).replace(/\.?0+$/, "")}s`;
+    return `${s.toFixed(2)}s`;
+  };
+
+  const parseTs = (v) => {
+    if (v == null) return null;
+    if (typeof v === "number") return Number.isFinite(v) ? v : null;
+    if (typeof v === "string") {
+      const t = Date.parse(v);
+      return Number.isFinite(t) ? t : null;
+    }
+    if (typeof v === "object") {
+      if (typeof v.epochMillis === "number") return v.epochMillis;
+      if (typeof v.toISOString === "function") return Date.parse(v.toISOString());
+    }
+    return null;
   };
 
   const fmtCost = (cost) => {
@@ -552,6 +623,8 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
     let providers = null;
     let sources = null;
     let providerTurns = null;
+    let runs = null;
+    let turnItems = null;
     let providerInstanceId = null;
     let model = null;
 
@@ -578,8 +651,10 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
             if (u.contextWindow) contextWindow = u.contextWindow;
             if (Array.isArray(u.providers)) providers = u.providers;
             if (Array.isArray(u.sources)) sources = u.sources;
-          } else if ("providerTurns" in v && Array.isArray(v.providerTurns) && !providerTurns) {
-            providerTurns = v.providerTurns;
+          } else if ("providerTurns" in v && Array.isArray(v.providerTurns)) {
+            if (!providerTurns) providerTurns = v.providerTurns;
+            if (!runs && Array.isArray(v.runs)) runs = v.runs;
+            if (!turnItems && Array.isArray(v.turnItems)) turnItems = v.turnItems;
           } else if ("usageLimitSources" in v && Array.isArray(v.usageLimitSources) && !sources) {
             sources = v.usageLimitSources;
           } else if (!providerInstanceId && "providerInstanceId" in v && "model" in v && typeof v.providerInstanceId === "string") {
@@ -588,7 +663,7 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
           }
         }
       }
-      if (contextWindow && providers && providerTurns) break;
+      if (contextWindow && providers && providerTurns && runs) break;
     }
 
     // Fallback: infer active provider from composer model button aria-label if not directly captured
@@ -607,6 +682,8 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
       providers: providers || [],
       sources: sources || [],
       providerTurns: providerTurns || [],
+      runs: runs || [],
+      turnItems: turnItems || [],
       providerInstanceId,
       model,
     };
@@ -781,31 +858,114 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
     };
   }
 
+  function summarizeRunMetrics(raw, spend) {
+    const runs = raw?.runs || [];
+    const turns = raw?.providerTurns || [];
+    const items = raw?.turnItems || [];
+    const cw = raw?.contextWindow || null;
+
+    const latestRun = runs.length > 0 ? runs[runs.length - 1] : null;
+    const latestTurn = turns.length > 0 ? turns[turns.length - 1] : null;
+    const totalRuns = runs.length || (turns.length > 0 ? turns.length : 0);
+    const turnIndex = latestRun?.ordinal || totalRuns || null;
+
+    const runItems = latestRun ? items.filter((it) => it?.runId === latestRun.id) : items;
+    const stepCount = runItems.length || cw?.toolUses || null;
+    const totalCalls = items.length || cw?.toolUses || null;
+
+    const startMs = parseTs(latestRun?.startedAt ?? latestRun?.requestedAt ?? latestTurn?.startedAt);
+    const endMs = parseTs(latestRun?.completedAt ?? latestTurn?.completedAt);
+    const durationSec =
+      startMs != null && endMs != null && endMs >= startMs
+        ? (endMs - startMs) / 1000
+        : cw?.durationMs != null && cw.durationMs > 0
+          ? cw.durationMs / 1000
+          : null;
+
+    let firstItemMs = null;
+    if (startMs != null && runItems.length > 0) {
+      for (const it of runItems) {
+        const ts = parseTs(it?.startedAt ?? it?.createdAt);
+        if (ts != null && ts >= startMs && (firstItemMs === null || ts < firstItemMs)) firstItemMs = ts;
+      }
+    }
+    const ttftSec = startMs != null && firstItemMs != null && firstItemMs > startMs ? (firstItemMs - startMs) / 1000 : null;
+    const streamSec =
+      ttftSec != null && durationSec != null && durationSec > ttftSec + 0.05 ? durationSec - ttftSec : null;
+
+    const lt = spend.latestTurnUsage;
+    const lastOut = lt?.outputTokens ?? cw?.lastOutputTokens ?? (totalRuns <= 1 ? cw?.outputTokens : null) ?? null;
+    const lastReason =
+      lt?.reasoningTokens ?? cw?.lastReasoningOutputTokens ?? (totalRuns <= 1 ? cw?.reasoningOutputTokens : null) ?? null;
+    const lastIn = lt?.inputTokens ?? cw?.lastInputTokens ?? (totalRuns <= 1 ? cw?.inputTokens : null) ?? null;
+    const turnDelta =
+      lastIn != null || lastOut != null ? (lastIn ?? 0) + (lastOut ?? 0) : cw?.lastUsedTokens ?? null;
+
+    const e2eTps = lastOut != null && lastOut > 0 && durationSec != null && durationSec > 0.1 ? lastOut / durationSec : null;
+    const streamTps = lastOut != null && lastOut > 0 && streamSec != null && streamSec > 0.1 ? lastOut / streamSec : null;
+
+    let thinkPct = null;
+    let bodyPct = null;
+    if (lastOut != null && lastOut > 0 && lastReason != null) {
+      thinkPct = Math.round(Math.min(100, Math.max(0, (lastReason / lastOut) * 100)));
+      bodyPct = 100 - thinkPct;
+    }
+
+    return {
+      turnIndex,
+      totalRuns,
+      stepCount,
+      totalCalls,
+      durationSec,
+      ttftSec,
+      streamSec,
+      e2eTps,
+      streamTps,
+      turnDelta,
+      thinkPct,
+      bodyPct,
+    };
+  }
+
   function buildTelemetryModel(raw) {
     const cw = raw?.contextWindow || null;
     const spend = summarizeSessionSpend(raw);
+    const metrics = summarizeRunMetrics(raw, spend);
 
     // Cache hit: prefer last turn (contextWindow.last* or latest providerTurn.turnTokenUsage), fall back to cumulative
     let cachePct = null;
+    let cachePctExact = null;
     let cacheScope = "暂无";
     let lastPct = null;
+    let lastPctExact = null;
     let totalPct = null;
+    let totalPctExact = null;
     const lt = spend.latestTurnUsage;
     if (cw && cw.lastInputTokens > 0 && cw.lastCachedInputTokens != null) {
-      lastPct = Math.round(Math.min(100, Math.max(0, (cw.lastCachedInputTokens / cw.lastInputTokens) * 100)));
+      const r = Math.min(100, Math.max(0, (cw.lastCachedInputTokens / cw.lastInputTokens) * 100));
+      lastPct = Math.round(r);
+      lastPctExact = Number(r.toFixed(1));
     } else if (lt && lt.inputTokens > 0 && lt.cachedInputTokens != null) {
-      lastPct = Math.round(Math.min(100, Math.max(0, (lt.cachedInputTokens / lt.inputTokens) * 100)));
+      const r = Math.min(100, Math.max(0, (lt.cachedInputTokens / lt.inputTokens) * 100));
+      lastPct = Math.round(r);
+      lastPctExact = Number(r.toFixed(1));
     }
     if (cw && cw.inputTokens > 0 && cw.cachedInputTokens != null) {
-      totalPct = Math.round(Math.min(100, Math.max(0, (cw.cachedInputTokens / cw.inputTokens) * 100)));
+      const r = Math.min(100, Math.max(0, (cw.cachedInputTokens / cw.inputTokens) * 100));
+      totalPct = Math.round(r);
+      totalPctExact = Number(r.toFixed(1));
     } else if (spend.inputTokens > 0 && spend.cachedInputTokens != null) {
-      totalPct = Math.round(Math.min(100, Math.max(0, (spend.cachedInputTokens / spend.inputTokens) * 100)));
+      const r = Math.min(100, Math.max(0, (spend.cachedInputTokens / spend.inputTokens) * 100));
+      totalPct = Math.round(r);
+      totalPctExact = Number(r.toFixed(1));
     }
     if (lastPct !== null) {
       cachePct = lastPct;
+      cachePctExact = lastPctExact;
       cacheScope = "最近一轮";
     } else if (totalPct !== null) {
       cachePct = totalPct;
+      cachePctExact = totalPctExact;
       cacheScope = "会话累计";
     }
 
@@ -820,10 +980,11 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
 
     const quota = raw ? pickQuotaGroups(raw) : { driver: "", groups: [], unavailable: null };
     return {
-      cache: { pct: cachePct, scope: cacheScope, lastPct, totalPct, cw, lt },
+      cache: { pct: cachePct, pctExact: cachePctExact, scope: cacheScope, lastPct, lastPctExact, totalPct, totalPctExact, cw, lt },
       ctx: { pct: ctxPct, cw },
       quota,
       spend,
+      metrics,
     };
   }
 
@@ -940,6 +1101,14 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
     return true;
   }
 
+  function quotaRemainRingSvg(remainPct) {
+    const r = 7;
+    const c = 2 * Math.PI * r;
+    const off = remainPct == null ? c : c * (1 - remainPct / 100);
+    const tone = remainPct == null ? "normal" : remainPct <= 10 ? "danger" : remainPct <= 20 ? "warn" : "normal";
+    return `<svg class="pq-ring" viewBox="0 0 18 18" aria-hidden="true"><circle class="trk" cx="9" cy="9" r="${r}"/>${remainPct != null ? `<circle class="arc" data-tone="${tone}" cx="9" cy="9" r="${r}" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}"/>` : ""}</svg>`;
+  }
+
   function renderTelPopover(anchorBtn) {
     if (!telPop) return;
     if (!telOpenKind || !lastTelData) {
@@ -956,94 +1125,131 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
 
     const d = lastTelData;
     let htmlStr = "";
-    if (telOpenKind === "cache") {
-      const cw = d.cache.cw;
-      const lt = d.cache.lt;
-      const rows = [];
-      if (d.cache.lastPct !== null) rows.push(["最近一轮命中率", `${d.cache.lastPct}%`]);
-      if (d.cache.totalPct !== null) rows.push(["会话累计命中率", `${d.cache.totalPct}%`]);
-      if (cw?.lastInputTokens > 0) {
-        rows.push(["本轮缓存读取", `${fmtTokens(cw.lastCachedInputTokens)} / ${fmtTokens(cw.lastInputTokens)}`]);
-      } else if (lt?.inputTokens > 0 && lt.cachedInputTokens != null) {
-        rows.push(["本轮缓存读取", `${fmtTokens(lt.cachedInputTokens)} / ${fmtTokens(lt.inputTokens)}`]);
-      }
-      if (cw?.inputTokens > 0) {
-        rows.push(["累计缓存读取", `${fmtTokens(cw.cachedInputTokens)} / ${fmtTokens(cw.inputTokens)}`]);
-      } else if (d.spend.inputTokens > 0 && d.spend.cachedInputTokens != null) {
-        rows.push(["累计缓存读取", `${fmtTokens(d.spend.cachedInputTokens)} / ${fmtTokens(d.spend.inputTokens)}`]);
-      }
-      if (cw?.outputTokens != null || d.spend.outputTokens != null) {
-        rows.push(["输出 tokens", fmtTokens(cw?.outputTokens ?? d.spend.outputTokens)]);
-      }
-      if (rows.length === 0) rows.push(["状态", "首轮回复完成后开始统计"]);
-      htmlStr =
-        `<div class="pt"><span>会话缓存命中</span><small>${esc(d.cache.scope)}</small></div>` +
-        (d.cache.pct != null ? `<div class="pb"><i style="width:${d.cache.pct}%"></i></div>` : "") +
-        rows.map(([k, v]) => `<div class="pr"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("") +
-        `<div class="pf">默认优先显示最近一轮命中率，未拆分时回退到会话累计</div>`;
-    } else if (telOpenKind === "spend") {
-      const sp = d.spend;
-      const rows = [];
-      rows.push(["累计消耗 Token", fmtTokens(sp.totalTokens)]);
-      if (sp.inputTokens != null) rows.push(["总输入", fmtTokens(sp.inputTokens)]);
-      if (sp.cachedInputTokens != null) rows.push(["其中缓存读取", fmtTokens(sp.cachedInputTokens)]);
-      if (sp.cacheCreationTokens != null) rows.push(["其中缓存写入", fmtTokens(sp.cacheCreationTokens)]);
-      if (sp.outputTokens != null) rows.push(["总输出", fmtTokens(sp.outputTokens)]);
-      if (sp.reasoningTokens != null) rows.push(["其中思考输出", fmtTokens(sp.reasoningTokens)]);
-      const costStr = fmtCost(sp.cost);
-      rows.push(["当前会话花费", costStr ?? "—（服务商未上报）"]);
-      htmlStr =
-        `<div class="pt"><span>当前会话消耗</span><small>${esc(sp.source)}</small></div>` +
-        rows.map(([k, v]) => `<div class="pr"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("") +
-        `<div class="pf">Token 为本会话各轮输入与输出总计；花费直接读取服务商上报金额</div>`;
-    } else if (telOpenKind === "ctx") {
-      const cw = d.ctx.cw;
-      const rows = [];
-      if (cw) {
-        rows.push(["已用 / 上限", cw.maxTokens ? `${fmtTokens(cw.usedTokens)} / ${fmtTokens(cw.maxTokens)}` : fmtTokens(cw.usedTokens)]);
-        if (cw.remainingTokens != null) rows.push(["剩余可用", `${fmtTokens(cw.remainingTokens)} (${Math.max(0, 100 - (d.ctx.pct ?? 0))}%)`]);
-        if (cw.autoCompactThreshold) rows.push(["自动压缩阈值", fmtTokens(cw.autoCompactThreshold)]);
-      } else {
-        rows.push(["状态", "暂无上下文统计"]);
-      }
-      htmlStr =
-        `<div class="pt"><span>上下文窗口</span><small>${d.ctx.pct != null ? `${d.ctx.pct}% 已用` : "—"}</small></div>` +
-        (d.ctx.pct != null ? `<div class="pb"><i style="width:${d.ctx.pct}%"></i></div>` : "") +
-        rows.map(([k, v]) => `<div class="pr"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("") +
-        `<div class="pf">与右上角「会话详情」上下文数据同源</div>`;
-    } else if (telOpenKind === "quota") {
+    if (telOpenKind === "quota") {
       const q = d.quota;
-      const rows = [];
-      let barPct = null;
-      if (q.groups.length === 0) {
-        rows.push(["状态", q.unavailable?.message || "当前服务商未上报额度"]);
-      } else {
-        for (const g of q.groups) {
-          const pfx = g.tag ? `${g.tag} · ` : "";
-          if (g.mode === "dual") {
-            const wReset = fmtReset(g.weekly?.resetsAt);
-            const sReset = fmtReset(g.session?.resetsAt);
-            rows.push([`${pfx}5小时额度`, g.weeklyExhausted ? "—（周额度已耗尽）" : `${g.sessionPct ?? "—"}%${sReset ? ` · ${sReset}` : ""}`]);
-            rows.push([`${pfx}周额度`, `${g.weeklyPct ?? "—"}%${wReset ? ` · ${wReset}` : ""}`]);
-            barPct = Math.max(barPct ?? 0, g.weeklyPct ?? 0, g.sessionPct ?? 0);
-          } else {
-            const r = fmtReset(g.single?.resetsAt);
-            rows.push([g.label || "周额度", `${g.pct ?? "—"}%${r ? ` · ${r}` : ""}`]);
-            barPct = Math.max(barPct ?? 0, g.pct ?? 0);
-          }
+      const groupTitle = (g) => {
+        if (/^gemini/i.test(g.label || "")) return "Gemini 模型";
+        if (/^(3p|claude|gpt)/i.test(g.label || "")) return "Claude 与 GPT 模型";
+        if (q.driver === "codex") return "Codex 模型";
+        if (q.driver === "claudeAgent") return "Claude 模型";
+        return g.label || q.driver || "当前模型";
+      };
+      const rowHtml = (name, resetStr, usedPct, exhaustedNote) => {
+        if (exhaustedNote) {
+          return `<div class="pq-row"><div class="pq-left"><span class="pq-name">${esc(name)}</span><span class="pq-reset">${esc(exhaustedNote)}</span></div><div class="pq-right"><span>—</span>${quotaRemainRingSvg(null)}</div></div>`;
         }
+        const remain = usedPct != null ? Math.max(0, 100 - usedPct) : null;
+        return `<div class="pq-row"><div class="pq-left"><span class="pq-name">${esc(name)}</span>${resetStr ? `<span class="pq-reset">${esc(resetStr)}</span>` : ""}</div><div class="pq-right"><span>${remain != null ? `${remain}% 剩余` : "—"}</span>${quotaRemainRingSvg(remain)}</div></div>`;
+      };
+
+      if (q.groups.length === 0) {
+        htmlStr =
+          `<div class="psec"><b>用量</b><small>${esc(q.driver || "当前模型")}</small></div><div class="phr"></div>` +
+          `<div class="pr"><span>状态</span><b>${esc(q.unavailable?.message || "当前服务商未上报额度")}</b></div>`;
+      } else {
+        const blocks = q.groups.map((g) => {
+          const rows = [];
+          if (g.mode === "dual") {
+            rows.push(rowHtml("每周限额", fmtReset(g.weekly?.resetsAt), g.weeklyPct, null));
+            rows.push(
+              rowHtml(
+                "5 小时限额",
+                fmtReset(g.session?.resetsAt),
+                g.sessionPct,
+                g.weeklyExhausted ? "每周限额已耗尽" : null,
+              ),
+            );
+          } else {
+            const label = g.single?.kind === "weekly" ? "每周限额" : g.single?.kind === "session" ? "5 小时限额" : g.label || "用量限额";
+            rows.push(rowHtml(label, fmtReset(g.single?.resetsAt), g.pct, null));
+          }
+          return `<div class="pq-group"><div class="pq-gtitle">${esc(groupTitle(g))}</div>${rows.join("")}</div>`;
+        });
+        htmlStr = `<div class="psec"><b>用量</b><small>${esc(q.driver || "")}</small></div><div class="phr"></div>${blocks.join('<div class="phr"></div>')}`;
       }
+    } else {
+      // Rich two-section session telemetry panel (cache / ctx / spend all open this unified detail view)
+      const m = d.metrics;
+      const cw = d.ctx.cw;
+      const sp = d.spend;
+      const headRightParts = [];
+      if (m.turnIndex) headRightParts.push(`第${m.turnIndex}轮`);
+      if (m.stepCount) headRightParts.push(`总${m.stepCount}步`);
+      if (m.durationSec != null) headRightParts.push(`共耗时${fmtSec(m.durationSec)}`);
+
+      const turnRows = [];
+      if (m.streamTps != null || m.e2eTps != null) {
+        const spParts = [];
+        if (m.streamTps != null) spParts.push(`流式 ${m.streamTps.toFixed(1)} tok/s`);
+        if (m.e2eTps != null) spParts.push(`端到端 ${m.e2eTps.toFixed(1)} tok/s`);
+        turnRows.push(`<div class="pr"><span>生成速度</span><b>${spParts.join('<span class="dim">|</span>')}</b></div>`);
+      }
+      if (m.ttftSec != null || m.streamSec != null || m.durationSec != null) {
+        const tParts = [];
+        if (m.ttftSec != null) tParts.push(`首响 ${fmtSec(m.ttftSec)}`);
+        if (m.streamSec != null) tParts.push(`流式 ${fmtSec(m.streamSec)}`);
+        if (m.durationSec != null) tParts.push(`总计 ${fmtSec(m.durationSec)}`);
+        turnRows.push(`<div class="pr"><span>响应耗时</span><b>${tParts.join('<span class="dim">|</span>')}</b></div>`);
+      }
+      if (m.turnDelta != null || d.cache.pctExact != null) {
+        const cacheTone = pctTone(d.cache.pct, true);
+        const pill =
+          d.cache.pctExact != null
+            ? `<span class="ppill" data-tone="${cacheTone}">缓存率 ${d.cache.pctExact}%</span>`
+            : "";
+        turnRows.push(
+          `<div class="pr"><span>本轮净增</span><b>${m.turnDelta != null ? `+${fmtTokens(m.turnDelta)}` : "—"}${pill}</b></div>`,
+        );
+      }
+      if (m.thinkPct != null && m.bodyPct != null) {
+        turnRows.push(
+          `<div class="pr"><span>输出比例</span><span class="psplit">` +
+            `<span style="color:var(--t3p-pop-orange);font-weight:600">思维链 ${m.thinkPct}%</span>` +
+            `<span class="psplit-bar"><span class="psplit-think" style="width:${m.thinkPct}%"></span><span class="psplit-body" style="width:${m.bodyPct}%"></span></span>` +
+            `<span style="color:var(--t3p-pop-blue);font-weight:600">正文 ${m.bodyPct}%</span>` +
+          `</span></div>`,
+        );
+      }
+      if (turnRows.length === 0) {
+        turnRows.push(`<div class="pr"><span>状态</span><b>首轮回复完成后显示详细指标</b></div>`);
+      }
+
+      const sessRight = [];
+      if (m.totalRuns) sessRight.push(`${m.totalRuns} 轮提问`);
+      if (m.totalCalls) sessRight.push(`${m.totalCalls} 次调用`);
+
+      const ctxTone = pctTone(d.ctx.pct, false);
+      const ctxBarW = d.ctx.pct ?? 0;
+      const ctxText = cw
+        ? cw.maxTokens
+          ? `${fmtTokens(cw.usedTokens)}/${fmtTokens(cw.maxTokens)} (${d.ctx.pct ?? 0}%)`
+          : fmtTokens(cw.usedTokens)
+        : "—";
+      const avgCache = d.cache.totalPctExact != null ? `全轮次平均缓存 <b style="color:var(--t3p-pop-green)">${d.cache.totalPctExact}%</b>` : "";
+
+      const footParts = [];
+      if (sp.totalTokens != null) footParts.push(`累计消耗 ${fmtTokens(sp.totalTokens)}`);
+      if (sp.inputTokens != null) footParts.push(`输入 ${fmtTokens(sp.inputTokens)}`);
+      if (sp.cachedInputTokens != null) footParts.push(`缓存读 ${fmtTokens(sp.cachedInputTokens)}`);
+      if (sp.outputTokens != null) footParts.push(`输出 ${fmtTokens(sp.outputTokens)}`);
+      const costStr = fmtCost(sp.cost);
+      if (costStr) footParts.push(`花费 ${costStr}`);
+
       htmlStr =
-        `<div class="pt"><span>额度使用</span><small>${esc(q.driver || "当前模型")}</small></div>` +
-        (barPct != null ? `<div class="pb"><i style="width:${barPct}%"></i></div>` : "") +
-        rows.map(([k, v]) => `<div class="pr"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("") +
-        `<div class="pf">双圆环：外环 5 小时 / 内环周额度；周额度耗尽时 5 小时不显示数值</div>`;
+        `<div class="psec"><b>当前轮次</b><small>${esc(headRightParts.join("  ") || d.cache.scope)}</small></div>` +
+        `<div class="phr"></div>` +
+        turnRows.join("") +
+        `<div class="psec" style="margin-top:2px"><b>会话总计</b><small>${esc(sessRight.join(" / ") || sp.source)}</small></div>` +
+        `<div class="phr"></div>` +
+        `<div class="pctx-row"><div class="pb"><i data-tone="${ctxTone}" style="width:${ctxBarW}%"></i></div><b style="color:${ctxTone === "danger" ? "var(--t3p-pop-danger)" : ctxTone === "warn" ? "var(--t3p-pop-warn)" : "var(--foreground)"}">${esc(ctxText)}</b></div>` +
+        (avgCache ? `<div class="pr"><span></span><span>${avgCache}</span></div>` : "") +
+        `<div class="pf"><span>${esc(footParts.join(" · ") || "暂无累计消耗")}</span>${!costStr ? "<span>花费 —</span>" : ""}</div>`;
     }
 
     telPop.innerHTML = htmlStr;
     telPop.setAttribute("data-open", "");
     const r = btn.getBoundingClientRect();
-    const popW = 264;
+    const popW = Math.min(352, window.innerWidth - 20);
     const left = Math.max(10, Math.min(window.innerWidth - popW - 10, r.right - popW));
     const bottom = Math.max(10, window.innerHeight - r.top + 8);
     setVar(telPop, "left", `${Math.round(left)}px`);
@@ -1090,9 +1296,13 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
     const spendCost = fmtCost(model.spend.cost);
     const spendTone = model.spend.totalTokens != null || spendCost != null ? "normal" : "na";
     const spendHtml =
-      model.spend.totalTokens != null || spendCost != null
-        ? `<span class="val">Σ ${esc(spendTok)}<span class="sep">·</span>${esc(spendCost ?? "—")}</span>`
-        : `<span class="val">Σ —</span>`;
+      model.spend.totalTokens != null && spendCost != null
+        ? `<span class="val">Σ ${esc(spendTok)}<span class="sep">·</span>${esc(spendCost)}</span>`
+        : model.spend.totalTokens != null
+          ? `<span class="val">Σ ${esc(spendTok)}</span>`
+          : spendCost != null
+            ? `<span class="val">${esc(spendCost)}</span>`
+            : `<span class="val">Σ —</span>`;
 
     const sig = `${cacheText}|${cacheTone}|${ctxText}|${ctxTone}|${quotaTone}|${quotaHtml}|${spendTone}|${spendHtml}`;
     lastTelData = model;
