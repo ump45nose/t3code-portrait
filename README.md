@@ -38,24 +38,35 @@ storage.
 
 ## Install
 
+### Option A: Auto-enable when opening the regular T3 Code app (recommended)
+
 ```sh
 git clone https://github.com/ump45nose/t3code-portrait.git
 cd t3code-portrait
+scripts/install-autostart.sh  # options: --t3-app PATH  --port N (default 9338)  --uninstall
+```
+
+This installs a lightweight macOS `LaunchAgent` that listens to `NSWorkspace` app-launch events
+(zero polling). Keep the regular **T3 Code** icon in your Dock; whenever you open it without the
+debugging port, the watcher cleanly relaunches it with `--remote-debugging-port` and attaches the
+injector.
+
+### Option B: Separate launcher app
+
+```sh
 scripts/install.sh            # options: --t3-app PATH  --port N (default 9338)  --dest DIR
 ```
 
-This creates `~/Applications/T3 Code 竖屏.app`. Open T3 Code through it (drag it to the Dock in
-place of T3 Code). It starts T3 Code with a debugging port on `127.0.0.1` and runs the injector,
-which exits when T3 Code quits. If T3 Code is already running without the port, the launcher asks
-before quitting and reopening it. Opening T3 Code directly runs it without the layout.
+This creates `~/Applications/T3 Code 竖屏.app`. Opening T3 Code directly runs it without the layout.
 
 A debugging port lets any program on this Mac control T3 Code. It listens on `127.0.0.1` only.
 
-Log: `~/Library/Logs/t3code-portrait/injector.log`
+Logs: `~/Library/Logs/t3code-portrait/watcher.log` and `injector.log`.
 
 ## Uninstall
 
-Quit T3 Code, then delete `~/Applications/T3 Code 竖屏.app`.
+- Auto-enable mode: run `scripts/install-autostart.sh --uninstall`.
+- Launcher app: quit T3 Code, then delete `~/Applications/T3 Code 竖屏.app`.
 
 ## Claude-style theme
 
