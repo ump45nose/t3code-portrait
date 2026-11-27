@@ -969,19 +969,26 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
       cacheScope = "会话累计";
     }
 
-    // Context window
+    // Context window (apply a 400k soft cap display warning for Antigravity since agy lacks native cap config)
+    const quota = raw ? pickQuotaGroups(raw) : { driver: "", groups: [], unavailable: null };
+    const isAgy = quota.driver === "antigravity" || raw?.providerInstanceId === "antigravity";
+    const AGY_SOFT_CAP = 400_000;
     let ctxPct = null;
+    let softCap = null;
     if (cw) {
-      if (typeof cw.usedPercentage === "number") ctxPct = Math.round(Math.min(100, Math.max(0, cw.usedPercentage)));
-      else if (cw.maxTokens > 0 && typeof cw.usedTokens === "number") {
+      if (isAgy && typeof cw.usedTokens === "number" && (cw.maxTokens == null || cw.maxTokens > AGY_SOFT_CAP)) {
+        softCap = AGY_SOFT_CAP;
+        ctxPct = Math.round(Math.min(100, Math.max(0, (cw.usedTokens / AGY_SOFT_CAP) * 100)));
+      } else if (typeof cw.usedPercentage === "number") {
+        ctxPct = Math.round(Math.min(100, Math.max(0, cw.usedPercentage)));
+      } else if (cw.maxTokens > 0 && typeof cw.usedTokens === "number") {
         ctxPct = Math.round(Math.min(100, Math.max(0, (cw.usedTokens / cw.maxTokens) * 100)));
       }
     }
 
-    const quota = raw ? pickQuotaGroups(raw) : { driver: "", groups: [], unavailable: null };
     return {
       cache: { pct: cachePct, pctExact: cachePctExact, scope: cacheScope, lastPct, lastPctExact, totalPct, totalPctExact, cw, lt },
-      ctx: { pct: ctxPct, cw },
+      ctx: { pct: ctxPct, cw, softCap },
       quota,
       spend,
       metrics,
@@ -1221,9 +1228,11 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
       const ctxTone = pctTone(d.ctx.pct, false);
       const ctxBarW = d.ctx.pct ?? 0;
       const ctxText = cw
-        ? cw.maxTokens
-          ? `${fmtTokens(cw.usedTokens)}/${fmtTokens(cw.maxTokens)} (${d.ctx.pct ?? 0}%)`
-          : fmtTokens(cw.usedTokens)
+        ? d.ctx.softCap
+          ? `${fmtTokens(cw.usedTokens)}/${fmtTokens(d.ctx.softCap)} (${d.ctx.pct ?? 0}% · 软上限)`
+          : cw.maxTokens
+            ? `${fmtTokens(cw.usedTokens)}/${fmtTokens(cw.maxTokens)} (${d.ctx.pct ?? 0}%)`
+            : fmtTokens(cw.usedTokens)
         : "—";
       const avgCache = d.cache.totalPctExact != null ? `全轮次平均缓存 <b style="color:var(--t3p-pop-green)">${d.cache.totalPctExact}%</b>` : "";
 
