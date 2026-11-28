@@ -1134,6 +1134,7 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
     let htmlStr = "";
     if (telOpenKind === "quota") {
       const q = d.quota;
+      const quotaSource = q.driver === "antigravity" ? "服务端 agy CLI 登录账号" : q.driver || "当前模型";
       const groupTitle = (g) => {
         if (/^gemini/i.test(g.label || "")) return "Gemini 模型";
         if (/^(3p|claude|gpt)/i.test(g.label || "")) return "Claude 与 GPT 模型";
@@ -1151,7 +1152,7 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
 
       if (q.groups.length === 0) {
         htmlStr =
-          `<div class="psec"><b>用量</b><small>${esc(q.driver || "当前模型")}</small></div><div class="phr"></div>` +
+          `<div class="psec"><b>用量</b><small>${esc(quotaSource)}</small></div><div class="phr"></div>` +
           `<div class="pr"><span>状态</span><b>${esc(q.unavailable?.message || "当前服务商未上报额度")}</b></div>`;
       } else {
         const blocks = q.groups.map((g) => {
@@ -1172,7 +1173,7 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
           }
           return `<div class="pq-group"><div class="pq-gtitle">${esc(groupTitle(g))}</div>${rows.join("")}</div>`;
         });
-        htmlStr = `<div class="psec"><b>用量</b><small>${esc(q.driver || "")}</small></div><div class="phr"></div>${blocks.join('<div class="phr"></div>')}`;
+        htmlStr = `<div class="psec"><b>用量</b><small>${esc(quotaSource)}</small></div><div class="phr"></div>${blocks.join('<div class="phr"></div>')}`;
       }
     } else {
       // Rich two-section session telemetry panel (cache / ctx / spend all open this unified detail view)
