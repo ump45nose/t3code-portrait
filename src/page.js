@@ -663,16 +663,17 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
           }
         }
       }
-      if (contextWindow && providers && providerTurns && runs) break;
+      if (contextWindow && providers && providerTurns && runs && providerInstanceId) break;
     }
 
     // Fallback: infer active provider from composer model button aria-label if not directly captured
     if (!providerInstanceId && providers) {
       const modelBtn = document.querySelector('[data-chat-composer-footer] button[data-slot="popover-trigger"]');
       const aria = (modelBtn?.getAttribute("aria-label") || modelBtn?.textContent || "").toLowerCase();
-      if (/gemini|neon|agy|antigravity/.test(aria)) providerInstanceId = "antigravity";
-      else if (/claude|sonnet|opus|haiku/.test(aria)) providerInstanceId = "claudeAgent";
-      else if (/gpt|codex|o[134]|sol|terra/.test(aria)) providerInstanceId = "codex";
+      if (/kiro/.test(aria)) providerInstanceId = "kiro";
+      else if (/\bagy\b|antigravity/.test(aria)) providerInstanceId = "antigravity";
+      else if (/claude (?:code|agent)/.test(aria)) providerInstanceId = "claudeAgent";
+      else if (/codex/.test(aria)) providerInstanceId = "codex";
       else if (/cursor/.test(aria)) providerInstanceId = "cursor";
       else if (/grok/.test(aria)) providerInstanceId = "grok";
     }
@@ -700,7 +701,6 @@ html[data-t3p="top"][data-t3p-sheet-open] [data-preview-panel-mode="sheet"] [dat
     let prov =
       providers.find((p) => p.instanceId === providerInstanceId) ||
       providers.find((p) => p.driver === providerInstanceId) ||
-      providers.find((p) => (p.usageLimits?.windows?.length || 0) > 0) ||
       null;
 
     let driver = prov?.driver || providerInstanceId || "";
